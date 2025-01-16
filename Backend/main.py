@@ -6,21 +6,16 @@ from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProx
 from autogen import config_list_from_json
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
+from flask import Flask, request, jsonify,render_template
+
+app = Flask(__name__)
 
 class CustomEmbeddingFunction:
     def __init__(self, embedding_model):
         self.embedding_model = embedding_model
 
     def __call__(self, input: list) -> list:
-        """
-        Convert input texts into embeddings using the embedding model.
-
-        Args:
-            input (list): List of strings to embed.
-
-        Returns:
-            list: List of embeddings, where each embedding is a list of floats.
-        """
+    
         return self.embedding_model.embed_documents(input)
 
 gemini_config_list = config_list_from_json(
@@ -92,7 +87,6 @@ ragproxyagent = RetrieveUserProxyAgent(
     name="ragproxyagent",
     human_input_mode="NEVER",
     llm_config=llm_config,
-    # system_message="Assistant who has extra content retrieval power for solving difficult problems.",
     code_execution_config=False,
     retrieve_config={
         "model": gemini_config_list[0]["model"],
@@ -101,7 +95,6 @@ ragproxyagent = RetrieveUserProxyAgent(
         "n_results": 3,
         "docs_path": [
             "lesson.pdf"
-            # os.path.join(os.path.abspath(""), "..", "website", "docs"),
         ],
         "client": chromadb.PersistentClient(path=CHROMA_DB_PATH),
         "get_or_create": True,
@@ -118,9 +111,28 @@ groupchat = autogen.GroupChat(
     agents=[ragproxyagent, short_answer, long_answer, diag_answer,Final_paper], messages=[], max_round=9, speaker_selection_method="round_robin"
 )
 manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
-ragproxyagent.initiate_chat(
+
+@app.route('/run')
+def run():
+    output = ragproxyagent.initiate_chat(
     manager,
     problem=PROBLEM,
     message=ragproxyagent.message_generator,
     n_results=3,
 )
+
+    chat_history = output.chat_history  
+
+    for message in chat_history:
+        if 'content' in message:
+            final_output = message['content']
+
+
+    print(final_output)
+    return jsonify(final_output)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+app.run(debug=True,port=9090)

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Run RAG Proxy Agent</h1>
+    <button id="runButton">Generate</button>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('runButton').addEventListener('click', async () => {
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = "Generating output... Please wait.";
+
+            try {
+                const response = await fetch('http://127.0.0.1:9090/run');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                outputDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outputDiv.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
