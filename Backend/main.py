@@ -272,7 +272,7 @@ class QuestionPaperGenerator:
         """Setup basic configurations for the agents."""
         self.gemini_config_list = config_list_from_json(
             "OAI_CONFIG_LIST.json",
-            filter_dict={"model": ["gemini-2.0-flash-exp"]},
+            filter_dict={"model": [os.getenv("MODEL")]},
         )
         
         self.llm_config = {
@@ -287,8 +287,8 @@ class QuestionPaperGenerator:
         self.collection = self.chroma_client.get_or_create_collection(name=self.CHROMA_COLLECTION)
 
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001",
-            google_api_key="AIzaSyBt3JTEUjrNFb392jP-2YExCCSOlv8ev7A"
+            model=os.getenv("EMBEDDING"),
+            google_api_key=os.getenv("URL"),
         )
         self.custom_embedding = CustomEmbeddingFunction(embedding_model=self.embeddings)
         self.vector_db = Chroma(embedding_function=self.custom_embedding)
@@ -322,9 +322,9 @@ class QuestionPaperGenerator:
         self.final_paper = AssistantAgent(
             name="Question_format",
             system_message="""Organize the following questions into a finalized question paper. The paper should include:
-            1. *Short-Answer Questions (2 Marks)* focusing on Remember and Understand.
-            2. *Long-Answer Questions (10 Marks)* focusing on Evaluate and Create.
-            3. *Case Study (10 Marks)* focusing on Apply and Create.
+            1. *Short-Answer Questions (2 Marks)* focusing on Remember and Understand.(10 Questions)
+            2. *Long-Answer Questions (13 Marks)* focusing on Evaluate and Create.(5 Questions)
+            3. *Case Study (15 Marks)* focusing on Apply and Create.(1 Question)
             Ensure the questions are categorized, formatted appropriately, and distributed according to Bloom's Taxonomy, with a logical structure.""",
             llm_config=self.llm_config
         )
@@ -339,15 +339,22 @@ class QuestionPaperGenerator:
         self.long_answer = autogen.AssistantAgent(
             name="10_marks",
             is_termination_msg=self.termination_msg,
-            system_message="Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 10-mark long-answer questions that require *Evaluation* or *Creation*.",
+            system_message="Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 13-mark long-answer questions that require *Evaluation* or *Creation*.",
             llm_config=self.llm_config,
         )
         
         self.case_study = autogen.AssistantAgent(
             name="case_study",
             is_termination_msg=self.termination_msg,
-            system_message="""Create a concise case study with introduction, problem statement, supporting data, and thought-provoking questions.""",
-            llm_config=self.llm_config,
+            system_message="""You are a Case Study Generation Agent. Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 15-mark case study question, create a concise and structured case study that includes:
+
+            Introduction: A brief background of the scenario.
+            Problem Statement: A clear description of the challenge.
+            Supporting Data: Relevant information, diagrams, or examples.
+            Questions: Thought-provoking questions that require learners to analyze, evaluate, and create solutions based on the scenario.
+            Ensure the case study is practical, aligned with the context, and encourages critical thinking.""",
+
+             llm_config=self.llm_config,
         )
 
     def setup_group_chat(self):
@@ -430,11 +437,6 @@ class QuestionPaperGenerator:
         #     f.write(pdf_buffer.getvalue())
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
 @app.route('/run', methods=['GET', 'POST'])
 def run():
     try:
@@ -454,7 +456,7 @@ def run():
         pdf_path = os.path.join("db", "output.pdf")
         # generator.generate_pdf(final_output, pdf_path)
         
-        print(f"PDF saved to: {pdf_path}")
+        # print(f"PDF saved to: {pdf_path}")
         
         return jsonify({
             "message": "PDF saved successfully",
