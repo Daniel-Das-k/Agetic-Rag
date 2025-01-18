@@ -311,7 +311,7 @@ class QuestionPaperGenerator:
                 "chunk_mode": "one_line",
                 "client": self.chroma_client,
                 "get_or_create": True,
-                "overwrite": False,
+                "overwrite": True,
                 "vector_db": self.vector_db,
                 "collection_name": self.CHROMA_COLLECTION,
                 "embedding_function": self.custom_embedding,
@@ -319,9 +319,89 @@ class QuestionPaperGenerator:
             },
         )
 
+        self.json_formater = AssistantAgent(
+            name = "json_formater",
+            system_message = """You are a JSON formatting assistant. Your task is to take the structured question paper and convert it into a well-organized JSON format. 
+            The JSON should include the following structure:(Example)
+           {
+                "title": "Exam Title",
+                "instructions": [
+                    "Instruction 1",
+                    "Instruction 2",
+                    "..."
+                ],
+                "total_marks": 100,
+                "sections": [
+                    {
+                    "section_title": "Short-Answer Questions",
+                    "total_marks": 20,
+                    "questions": [
+                        {
+                        "question_number": 1,
+                        "question_text": "What is the general form of a quadratic polynomial in x with real coefficients?",
+                        "marks": 2
+                        },
+                        ...
+                    ]
+                    },
+                    {
+                    "section_title": "Long-Answer Questions",
+                    "total_marks": 65,
+                    "questions": [
+                        {
+                        "question_number": 1,
+                        "question_text": "A student claims that the relationship between the zeroes and coefficients of a polynomial is only applicable to quadratic polynomials. Evaluate this claim, using examples from the text to support your reasoning.",
+                        "marks": 13
+                        },
+                        ...
+                    ]
+                    },
+                    {
+                    "section_title": "Case Study",
+                    "total_marks": 15,
+                    "background": "A group of students is preparing for a mathematics competition. They are reviewing concepts related to number theory, including prime factorization, HCF, LCM, and irrational numbers. They encounter a problem that requires them to apply these concepts in a practical scenario.",
+                    "problem_statement": "The students are tasked with organizing a school event. They need to arrange chairs in rows and columns such that each row has the same number of chairs, and each column has the same number of chairs. They also need to determine the minimum number of chairs required to accommodate a specific number of students. Additionally, they are exploring the properties of numbers and need to prove the irrationality of a given number.",
+                    "supporting_data": [
+                        "The total number of chairs available is 360.",
+                        "The number of students attending the event is 120.",
+                        "The students are also working on proving that √5 is an irrational number."
+                    ],
+                    "questions": [
+                        {
+                        "question_number": 1,
+                        "question_text": "Using the prime factorization method, find the HCF and LCM of 360 and 120. Explain how these values can help in arranging the chairs in rows and columns.",
+                        "marks": 5,
+                        },
+                      ...
+                    ]
+                    }
+                ]
+                }
+
+            Rules and Instructions for JSON Formatting:
+
+            Extract the exam title and include it as the value for "title".
+            Include all instructions as an array under "instructions".
+            The total marks for the exam should be added as the value for "total_marks".
+            For each section (e.g., Short-Answer Questions, Long-Answer Questions, Case Study), create a corresponding object in the "sections" array:
+            Use the section name as "section_title".
+            Add the total marks for the section as "total_marks".
+            Include all questions in the section under the "questions" array, with each question formatted as:
+            "question_number": The question number.
+            "question_text": The text of the question.
+            "marks": The marks allocated for the question.
+            Ensure all text is properly escaped to make the JSON valid.
+            Validate the JSON output to ensure it adheres to the structure.
+            Always maintain clear, consistent formatting. If there is any ambiguity in the question paper, use your best judgment to organize the content logically.
+
+            """,
+            llm_config=self.llm_config
+        )
+
         self.final_paper = AssistantAgent(
             name="Question_format",
             system_message="""Organize the following questions into a finalized question paper. The paper should include:
+            Instuctions: Provide Basic instuctions to the students to write the exam and the marks distribution.
             1. *Short-Answer Questions (2 Marks)* focusing on Remember and Understand.(10 Questions)
             2. *Long-Answer Questions (13 Marks)* focusing on Evaluate and Create.(5 Questions)
             3. *Case Study (15 Marks)* focusing on Apply and Create.(1 Question)
@@ -348,10 +428,10 @@ class QuestionPaperGenerator:
             is_termination_msg=self.termination_msg,
             system_message="""You are a Case Study Generation Agent. Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 15-mark case study question, create a concise and structured case study that includes:
 
-            Introduction: A brief background of the scenario.
+            Back-Ground: A brief background of the scenario.
             Problem Statement: A clear description of the challenge.
             Supporting Data: Relevant information, diagrams, or examples.
-            Questions: Thought-provoking questions that require learners to analyze, evaluate, and create solutions based on the scenario.
+            Questions: Thought-provoking questions that require learners to analyze, evaluate, and create solutions based on the scenario.(15 marks - Total)
             Ensure the case study is practical, aligned with the context, and encourages critical thinking.""",
 
              llm_config=self.llm_config,
@@ -360,7 +440,7 @@ class QuestionPaperGenerator:
     def setup_group_chat(self):
         self.groupchat = autogen.GroupChat(
             agents=[self.ragproxyagent, self.short_answer, self.long_answer, 
-                   self.case_study, self.final_paper],
+                   self.case_study, self.final_paper,self.json_formater],
             messages=[],
             max_round=9,
             speaker_selection_method="round_robin"
