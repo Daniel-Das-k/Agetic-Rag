@@ -45,13 +45,13 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ file }) => {
     setNumPages(numPages);
   };
 
-  if (!pdfUrl) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
-  }
+  // if (!pdfUrl) {
+  //   return (
+  //     <div className="flex items-center justify-center h-32">
+  //       <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col items-center py-6 px-4 max-h-[80vh] overflow-y-auto">
