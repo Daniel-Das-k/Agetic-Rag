@@ -2,6 +2,7 @@ import os
 import io
 from textwrap import wrap
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS 
 import chromadb
 import autogen
 import uuid
@@ -16,6 +17,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 
 app = Flask(__name__)
+CORS(app)
 
 class CustomEmbeddingFunction:
     def __init__(self, embedding_model):
@@ -92,7 +94,7 @@ class QuestionPaperGenerator:
         self.json_formater = AssistantAgent(
             name = "json_formater",
             system_message = """You are a JSON formatting assistant. Your task is to take the structured question paper and convert it into a well-organized JSON format. 
-            The JSON should include the following structure:(Example)
+            The JSON should include the following structure:(Example) i should get the response only in this format and dont include any additional quotes or text.
            {
                 "title": "Exam Title",
                 "instructions": [
@@ -149,6 +151,7 @@ class QuestionPaperGenerator:
                 }
 
             Rules and Instructions for JSON Formatting:
+            
 
             Extract the exam title and include it as the value for "title".
             Include all instructions as an array under "instructions".
@@ -163,7 +166,7 @@ class QuestionPaperGenerator:
             Ensure all text is properly escaped to make the JSON valid.
             Validate the JSON output to ensure it adheres to the structure.
             Always maintain clear, consistent formatting. If there is any ambiguity in the question paper, use your best judgment to organize the content logically.
-
+        
             """,
             llm_config=self.llm_config
         )
@@ -309,8 +312,7 @@ def run():
         # print(f"PDF saved to: {pdf_path}")
         
         return jsonify({
-            "message": "PDF saved successfully",
-            "pdf_path": pdf_path
+            "final_output": final_output
         })
         
     except Exception as e:
