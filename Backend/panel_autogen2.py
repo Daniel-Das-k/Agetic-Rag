@@ -9,9 +9,6 @@
 # import asyncio
 # from  autogen import config_list_from_json
 
-# os.environ["OPENAI_API_KEY"] = "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"
-
-
 # gemini_config_list = config_list_from_json(
 #             "OAI_CONFIG_LIST.json",
 #             filter_dict={"model": [os.getenv("MODEL")]},
