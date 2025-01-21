@@ -8,6 +8,7 @@ import autogen
 import uuid
 from autogen import AssistantAgent
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
+from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 from autogen import config_list_from_json
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
@@ -171,7 +172,7 @@ class QuestionPaperGenerator:
             llm_config=self.llm_config
         )
 
-        self.final_paper = AssistantAgent(
+        self.final_paper  = AssistantAgent(
             name="Question_format",
             system_message="""Organize the following questions into a finalized question paper. The paper should include:
             Instuctions: Provide Basic instuctions to the students to write the exam and the marks distribution.
@@ -182,21 +183,21 @@ class QuestionPaperGenerator:
             llm_config=self.llm_config
         )
         
-        self.short_answer = autogen.AssistantAgent(
+        self.short_answer = AssistantAgent(
             name="2_marks",
             is_termination_msg=self.termination_msg,
             system_message="Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 2-mark short-answer questions focusing on *Remembering* and *Understanding*.",
             llm_config=self.llm_config,
         )
         
-        self.long_answer = autogen.AssistantAgent(
+        self.long_answer =AssistantAgent(
             name="10_marks",
             is_termination_msg=self.termination_msg,
             system_message="Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 13-mark long-answer questions that require *Evaluation* or *Creation*.",
             llm_config=self.llm_config,
         )
         
-        self.case_study = autogen.AssistantAgent(
+        self.case_study = AssistantAgent(
             name="case_study",
             is_termination_msg=self.termination_msg,
             system_message="""You are a Case Study Generation Agent. Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 15-mark case study question, create a concise and structured case study that includes:
