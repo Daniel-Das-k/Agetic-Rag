@@ -289,34 +289,36 @@ class QuestionPaperGenerator:
         #     f.write(pdf_buffer.getvalue())
 
 
-@app.route('/run', methods=['GET', 'POST'])
-def run():
-    try:
-        file = request.files.get('file')
-        if not file:
-            return jsonify({"error": "No file uploaded"}), 400
+# @app.route('/run', methods=['GET', 'POST'])
+# def run():
+#     try:
+#         file = request.files.get('file')
+#         if not file:
+#             return jsonify({"error": "No file uploaded"}), 400
             
-        print("Running with file:", file.filename)
+#         print("Running with file:", file.filename)
 
-        generator = QuestionPaperGenerator(file=file.filename)
+#         generator = QuestionPaperGenerator(file=file.filename)
 
-        final_output = generator.generate_paper()
+#         final_output = generator.generate_paper()
         
-        if not final_output:
-            return jsonify({"error": "No output generated"}), 400
+#         if not final_output:
+#             return jsonify({"error": "No output generated"}), 400
             
-        pdf_path = os.path.join("db", "output.pdf")
-        # generator.generate_pdf(final_output, pdf_path)
+#         pdf_path = os.path.join("db", "output.pdf")
+#         # generator.generate_pdf(final_output, pdf_path)
         
-        # print(f"PDF saved to: {pdf_path}")
+#         # print(f"PDF saved to: {pdf_path}")
         
-        return jsonify({
-            "final_output": final_output
-        })
+#         return jsonify({
+#             "final_output": final_output
+#         })
         
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+#     except Exception as e:
+#         print(f"Error: {str(e)}")
+#         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True, port=9090)
+# if __name__ == '__main__':
+#     app.run(debug=True, port=9090)
+# if __name__ == '__main__':
+#     app.run(debug=True, port=9090)
