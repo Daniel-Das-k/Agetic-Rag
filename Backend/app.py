@@ -1,7 +1,12 @@
 import os
 from dotenv import load_dotenv
-from main import QuestionPaperGenerator
-from image_q import MolecularCaseStudyGenerator
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from qa import QuestionPaperGenerator
+from image_case import ImageCaseStudyGenerator
+
+app = Flask(__name__)
+CORS(app)
 
 load_dotenv()
 
@@ -11,31 +16,59 @@ if missing_vars:
     raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 def process_file(file_path):
-
-    images_dir = os.path.join(os.path.dirname(file_path), "images")
+    image_dir = "images/"
+    print("Image directory:", image_dir)
     
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Input file not found: {file_path}")
-    
-    if os.path.exists(images_dir) and any(os.path.isfile(os.path.join(images_dir, f)) for f in os.listdir(images_dir)):
-        image_files = [f for f in os.listdir(images_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+    if os.path.exists(image_dir) and os.path.isdir(image_dir):
+        image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         if image_files:
-            print(image_files[1],"**"* 1000)
-            image_path = os.path.join(images_dir, image_files[1])
+            image_path = os.path.join(image_dir, image_files[0])
             print(f"Using image file: {image_path}")
-            image_generator = MolecularCaseStudyGenerator(file_path, image_path)
+            image_generator = ImageCaseStudyGenerator(file_path, image_path)
             return image_generator.generate_paper(image_path)
     
     print("No images found, generating text-based questions")
     text_generator = QuestionPaperGenerator(file_path)
     return text_generator.generate_paper()
 
-if __name__ == "__main__":
 
+@app.route('/generate', methods=['POST'])
+def generate_questions():
     try:
-        file_path = "Electric_charges_and_fields.pdf"
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+            
+        file = request.files['file']
+        if not file.filename:
+            return jsonify({"error": "No file selected"}), 400
+            
+        print("Processing file:", file.filename)
+
+        upload_dir = "/tmp/uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        file_path = os.path.join(upload_dir, file.filename)
+        file.save(file_path)
+        print("File saved to:", file_path)
+        
         result = process_file(file_path)
-        print("\nGenerated Output:")
-        print(result)
+
+        import shutil
+        shutil.rmtree(upload_dir)
+        
+        return jsonify({
+            "final_output": result
+        })
+        
     except Exception as e:
         print(f"Error: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "message": "Please check your input files and try again"
+        }), 500
+
+if __name__ == "__main__":
+    app.run(debug=True, port=9090)

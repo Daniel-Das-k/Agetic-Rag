@@ -51,7 +51,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:9090/run', {
+      const response = await fetch('http://localhost:9090/generate', {
         method: 'POST',
         body: formData,
       });
