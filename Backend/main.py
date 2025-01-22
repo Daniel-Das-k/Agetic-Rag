@@ -47,7 +47,7 @@ class QuestionPaperGenerator:
         
         self.llm_config = {
             "config_list": self.gemini_config_list,
-            "cache_seed": None,
+            "cache_seed": 40,
             "temperature": 0,
             "timeout": 300,
         }
@@ -65,6 +65,7 @@ class QuestionPaperGenerator:
 
     def create_agents(self):
         text_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n", "\r", "\t"])
+        print(self.file,"*"* 1000)
  
         self.ragproxyagent = RetrieveUserProxyAgent(
             name="ragproxyagent",
