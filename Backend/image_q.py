@@ -173,31 +173,14 @@ class MolecularCaseStudyGenerator:
             message=problem,
             n_results=1
         )
-
-        # Extract and validate JSON content
         for message in response.chat_history:
-            try:
-                # Remove any code block markers
-                content = message['content'].replace('```json', '').replace('```', '').strip()
-                
-                # Parse and validate JSON
-                case_study = json.loads(content)
-                
-                # Additional validation
-                assert 'section_title' in case_study
-                assert 'total_marks' in case_study and case_study['total_marks'] == 15
-                assert 'questions' in case_study
-                
-                return case_study
-            except (json.JSONDecodeError, KeyError, AssertionError) as e:
-                print(f"JSON parsing error: {e}")
-                continue
-
-        # Fallback if no valid JSON found
-        return {"error": "Unable to generate case study"}
+            if 'content' in message:
+                final_output = message['content']
+        
+        return final_output
+        
 
 def main():
- 
     image_path = "images/aceticAcid.png"
     generator = MolecularCaseStudyGenerator()
     case_study = generator.generate_case_study(image_path)
