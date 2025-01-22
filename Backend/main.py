@@ -8,17 +8,15 @@ import autogen
 import uuid
 from autogen import AssistantAgent
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
-from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
+from image_q import MolecularCaseStudyGenerator
 from autogen import config_list_from_json
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib import colors
 
 app = Flask(__name__)
 CORS(app)
+image_case_study = MolecularCaseStudyGenerator()
 
 class CustomEmbeddingFunction:
     def __init__(self, embedding_model):
@@ -190,7 +188,7 @@ class QuestionPaperGenerator:
             llm_config=self.llm_config,
         )
         
-        self.long_answer =AssistantAgent(
+        self.long_answer = AssistantAgent(
             name="10_marks",
             is_termination_msg=self.termination_msg,
             system_message="Based on the retrieved content for the topics: [List of Retrieved Topics and Content], generate 13-mark long-answer questions that require *Evaluation* or *Creation*.",
